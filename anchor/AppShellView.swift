@@ -23,7 +23,6 @@ struct AppShellView: View {
             }
         }
 
-        /// One consistent outline set — no mixing filled and outline symbols.
         var icon: String {
             switch self {
             case .home: "house"
@@ -38,8 +37,7 @@ struct AppShellView: View {
     let homeState: HomeViewState
 
     @State private var selectedTab = Tab.home
-    @State private var sessionDuration = 25
-    @State private var isShowingSessionSetup = false
+    @State private var isShowingSession = false
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
@@ -53,11 +51,11 @@ struct AppShellView: View {
                 NavigationStack {
                     HomeScreen(
                         state: homeState,
-                        onStartSession: showSessionSetup,
+                        onStartSession: { isShowingSession = true },
                         onSeeAllSessions: { selectedTab = .sessions }
                     )
-                    .navigationDestination(isPresented: $isShowingSessionSetup) {
-                        StartSessionScreen(duration: sessionDuration)
+                    .navigationDestination(isPresented: $isShowingSession) {
+                        ActiveSessionScreen()
                     }
                 }
             }
@@ -78,7 +76,13 @@ struct AppShellView: View {
                 NavigationStack { SettingsScreen() }
             }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { tabBar }
+        // The bar lives outside the NavigationStack, so it would otherwise sit
+        // on top of a pushed session. Dropping it also frees the inset height.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !isShowingSession {
+                tabBar
+            }
+        }
         .tint(Colors.primary)
     }
 
@@ -143,10 +147,6 @@ struct AppShellView: View {
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
-    private func showSessionSetup(duration: Int) {
-        sessionDuration = duration
-        isShowingSessionSetup = true
-    }
 }
 
 struct FeaturePlaceholderView: View {

@@ -19,7 +19,6 @@ struct HomeViewState: Equatable {
     let subtitle: String
     let todayFocusMinutes: Int
     let completedSessions: Int
-    let durationPresets: [Int]
     let recentSessions: [RecentSession]
 
     static let empty = HomeViewState(
@@ -27,33 +26,20 @@ struct HomeViewState: Equatable {
         subtitle: "Ready to build a focused day?",
         todayFocusMinutes: 0,
         completedSessions: 0,
-        durationPresets: [25, 45, 60],
         recentSessions: []
     )
 }
 
 struct HomeScreen: View {
     let state: HomeViewState
-    let onStartSession: (Int) -> Void
+    let onStartSession: () -> Void
     let onSeeAllSessions: () -> Void
-
-    @State private var selectedDuration: Int?
-
-    private var activeDuration: Int {
-        if let selectedDuration,
-           state.durationPresets.contains(selectedDuration) {
-            return selectedDuration
-        }
-
-        return state.durationPresets.first ?? 25
-    }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 34) {
                 topBar
                 intro
-                durationStrip
                 startButton
                 todaySection
                 recentSection
@@ -102,54 +88,15 @@ struct HomeScreen: View {
         }
     }
 
-    // MARK: - Duration
-
-    private var durationStrip: some View {
-        HStack(spacing: 10) {
-            ForEach(state.durationPresets, id: \.self) { duration in
-                durationChip(duration)
-            }
-        }
-    }
-
-    private func durationChip(_ duration: Int) -> some View {
-        let isSelected = activeDuration == duration
-
-        return Button {
-            selectedDuration = duration
-        } label: {
-            VStack(spacing: 1) {
-                Text("\(duration)")
-                    .font(.system(size: 26, weight: .bold))
-                    .tracking(-0.6)
-
-                Text("MIN")
-                    .font(.system(size: 10, weight: .bold))
-                    .tracking(0.9)
-                    .opacity(0.6)
-            }
-            .foregroundStyle(isSelected ? Colors.ink : Colors.onCanvas)
-            .frame(maxWidth: .infinity)
-            .frame(height: 76)
-            .background(
-                isSelected ? Color.white : Colors.ink,
-                in: RoundedRectangle(cornerRadius: 20, style: .continuous)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("\(duration) minutes")
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-    }
+    // MARK: - Start
 
     private var startButton: some View {
-        Button {
-            onStartSession(activeDuration)
-        } label: {
+        Button(action: onStartSession) {
             HStack(spacing: 9) {
                 Image(systemName: "play.fill")
                     .font(.system(size: 14, weight: .bold))
 
-                Text("Start \(activeDuration) min focus")
+                Text("Start a new session")
                     .font(.system(size: 17, weight: .bold))
             }
             .foregroundStyle(Colors.ink)
@@ -168,14 +115,12 @@ struct HomeScreen: View {
                 todayCard(
                     value: formattedMinutes(state.todayFocusMinutes),
                     label: "Focus time",
-                    pill: "Tracked",
                     pillColor: Colors.accent
                 )
 
                 todayCard(
                     value: "\(state.completedSessions)",
                     label: "Completed",
-                    pill: state.completedSessions == 0 ? "None yet" : "On track",
                     pillColor: state.completedSessions == 0
                         ? Colors.border
                         : Colors.success
@@ -187,7 +132,6 @@ struct HomeScreen: View {
     private func todayCard(
         value: String,
         label: String,
-        pill: String,
         pillColor: Color
     ) -> some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -202,13 +146,6 @@ struct HomeScreen: View {
                 .padding(.top, 6)
 
             Spacer(minLength: 18)
-
-            Text(pill)
-                .font(.system(size: 12, weight: .bold))
-                .foregroundStyle(Colors.ink)
-                .padding(.horizontal, 11)
-                .padding(.vertical, 6)
-                .background(pillColor, in: Capsule())
         }
         .padding(18)
         .frame(maxWidth: .infinity, minHeight: 150, alignment: .leading)
@@ -324,7 +261,7 @@ struct HomeScreen: View {
     NavigationStack {
         HomeScreen(
             state: .empty,
-            onStartSession: { _ in },
+            onStartSession: {},
             onSeeAllSessions: {}
         )
     }
@@ -338,13 +275,12 @@ struct HomeScreen: View {
                 subtitle: "You focus best near the waterfront around 9 AM.",
                 todayFocusMinutes: 95,
                 completedSessions: 3,
-                durationPresets: [25, 45, 60],
                 recentSessions: [
                     .init(id: "1", title: "Deep work", detail: "Ferry Building", duration: "50m"),
                     .init(id: "2", title: "Reading", detail: "Home desk", duration: "25m")
                 ]
             ),
-            onStartSession: { _ in },
+            onStartSession: {},
             onSeeAllSessions: {}
         )
     }
