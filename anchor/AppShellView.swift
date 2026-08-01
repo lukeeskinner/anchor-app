@@ -3,6 +3,7 @@
 //  anchor
 //
 
+import SwiftData
 import SwiftUI
 
 struct AppShellView: View {
@@ -34,8 +35,6 @@ struct AppShellView: View {
         }
     }
 
-    let homeState: HomeViewState
-
     @State private var selectedTab = Tab.home
     @State private var isShowingSession = false
 
@@ -49,8 +48,7 @@ struct AppShellView: View {
             // survive a switch, which a plain `switch` would discard.
             tab(.home) {
                 NavigationStack {
-                    HomeScreen(
-                        state: homeState,
+                    HomeTabView(
                         onStartSession: { isShowingSession = true },
                         onSeeAllSessions: { selectedTab = .sessions }
                     )
@@ -180,5 +178,6 @@ struct FeaturePlaceholderView: View {
 }
 
 #Preview {
-    AppShellView(homeState: .empty)
+    AppShellView()
+        .modelContainer(for: [FocusSession.self, FocusPlace.self], inMemory: true)
 }

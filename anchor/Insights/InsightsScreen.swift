@@ -3,15 +3,12 @@
 //  anchor
 //
 
+import SwiftData
 import SwiftUI
 
 struct InsightsScreen: View {
     var body: some View {
-        FeaturePlaceholderView(
-            title: "Insights",
-            message: "Focus patterns and progress summaries will appear here.",
-            systemImage: "chart.xyaxis.line"
-        )
+        PlacesMap()
     }
 }
 
@@ -19,5 +16,6 @@ struct InsightsScreen: View {
     NavigationStack {
         InsightsScreen()
     }
-    .preferredColorScheme(.dark)
+    .environment(LocationService())
+    .modelContainer(for: [FocusSession.self, FocusPlace.self], inMemory: true)
 }

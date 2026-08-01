@@ -3,15 +3,18 @@
 //  anchor
 //
 
+import CoreLocation
+import MapKit
+import SwiftData
 import SwiftUI
 
 struct ActiveSessionScreen: View {
     @Environment(\.dismiss) private var dismiss
-    @State private var startDate = Date.now
+    @Environment(\.modelContext) private var context
+    @Environment(LocationService.self) private var location
 
-    private var elapsed: TimeInterval {
-        Date.now.timeIntervalSince(startDate)
-    }
+    @State private var startDate = Date.now
+    @State private var startCoordinate: CLLocationCoordinate2D?
 
     var body: some View {
         ZStack {
@@ -55,12 +58,37 @@ struct ActiveSessionScreen: View {
             }
         }
         .navigationBarBackButtonHidden()
+        .task {
+            await location.requestWhenInUseIfNeeded()
+            startCoordinate = await location.currentFix()
+        }
     }
 
     private func endSession() {
-        // TODO: persist the finished session `elapsed` is its length.
-        _ = elapsed
+        let session = FocusSession.record(
+            start: startDate,
+            end: .now,
+            coordinate: startCoordinate,
+            in: context
+        )
+
+        if let place = session.place, !place.isUserNamed {
+            Task { await name(place) }
+        }
+
         dismiss()
+    }
+
+    /// Names a place the first time anchor sees it. Never overwrites a name the
+    /// user chose themselves.
+    private func name(_ place: FocusPlace) async {
+        guard let found = await PlaceLookup.lookup(place.coordinate) else { return }
+        guard !place.isUserNamed else { return }
+
+        place.name = found.name
+        place.poiCategoryRaw = found.category?.rawValue
+        place.updatedAt = .now
+        try? context.save()
     }
 }
 

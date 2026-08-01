@@ -10,8 +10,6 @@ struct CanvasBackground: View {
         Colors.canvas
             .overlay {
                 Canvas { context, size in
-                    // Anchored off-screen top-left so the rings read as a
-                    // fragment of a much larger survey, not a bullseye.
                     let center = CGPoint(x: size.width * 0.22, y: size.height * 0.16)
                     let maxRadius = max(size.width, size.height) * 1.6
 

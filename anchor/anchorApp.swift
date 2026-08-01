@@ -5,17 +5,21 @@
 //  Created by Luke Skinner on 7/11/26.
 //
 
+import SwiftData
 import SwiftUI
 
 @main
 struct anchorApp: App {
     @AppStorage("appAppearance") private var appAppearance = AppAppearance.dark
+    @State private var location = LocationService()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(location)
                 .preferredColorScheme(appAppearance.colorScheme)
         }
+        .modelContainer(AnchorStore.container)
     }
 }
 
