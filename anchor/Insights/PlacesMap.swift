@@ -15,6 +15,11 @@ struct PlacesMap: View {
     @Query(filter: #Predicate<FocusPlace> { $0.deletedAt == nil })
     private var places: [FocusPlace]
 
+    /// Only to tell "you haven't focused anywhere yet" apart from "you have
+    /// sessions, but none of them carry a location".
+    @Query(filter: #Predicate<FocusSession> { $0.deletedAt == nil })
+    private var sessions: [FocusSession]
+
     @State private var camera = MapCameraPosition.automatic
     @State private var selectedID: UUID?
 
@@ -119,6 +124,12 @@ struct PlacesMap: View {
         .background(Colors.ink, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
+    private var emptyMessage: String {
+        sessions.isEmpty
+            ? "Finish a focus session and the place shows up here."
+            : "Your earlier sessions were recorded before anchor could place them. New sessions will appear here."
+    }
+
     private var empty: some View {
         ZStack {
             CanvasBackground()
@@ -128,12 +139,12 @@ struct PlacesMap: View {
                     .font(.system(size: 34, weight: .light))
                     .foregroundStyle(Colors.onCanvas.opacity(0.8))
 
-                Text("No places yet")
+                Text(sessions.isEmpty ? "No places yet" : "No places recorded")
                     .font(.system(size: 26, weight: .heavy))
                     .tracking(-0.8)
                     .foregroundStyle(Colors.onCanvas)
 
-                Text("Finish a focus session and the place shows up here.")
+                Text(emptyMessage)
                     .font(.subheadline)
                     .foregroundStyle(Colors.onCanvas.opacity(0.7))
                     .multilineTextAlignment(.center)
